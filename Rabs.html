@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProjectRabs — A Corkboard for Your Characters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FBF3FF;
+  --paper:#FFFFFF;
+  --accent1:#FF6FA5;
+  --accent2:#2EC4B6;
+  --accent3:#FFD23F;
+  --accent4:#6C5CE7;
+  --ink:#3D2C5F;
+  --ink-soft:#6b5b8f;
+  --danger:#e14b6a;
+  --shadow: rgba(61,44,95,0.18);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:'Quicksand',sans-serif;
+  background:
+    radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--accent3) 18%, transparent), transparent 40%),
+    radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--accent2) 20%, transparent), transparent 45%),
+    radial-gradient(circle at 50% 90%, color-mix(in srgb, var(--accent1) 16%, transparent), transparent 45%),
+    var(--bg);
+  color:var(--ink);
+  min-height:100vh;
+}
+h1,h2,h3,.display{font-family:'Fredoka',sans-serif;}
+.mono{font-family:'Space Mono',monospace;}
+button{font-family:'Quicksand',sans-serif;cursor:pointer;}
+a{color:var(--accent4);}
+::selection{background:var(--accent3);}
+
+/* ---------- Layout shells ---------- */
+#app{max-width:1180px;margin:0 auto;padding:0 18px 60px;}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 0 10px;flex-wrap:wrap;gap:10px;
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-badge{
+  width:44px;height:44px;border-radius:50%;
+  background:conic-gradient(from 200deg, var(--accent1), var(--accent3), var(--accent2), var(--accent4), var(--accent1));
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  box-shadow:0 3px 0 var(--shadow);
+  transform:rotate(-8deg);
+}
+.brand h1{font-size:26px;margin:0;color:var(--ink);letter-spacing:.5px;}
+.brand span.tag{display:block;font-size:11px;font-weight:600;color:var(--ink-soft);letter-spacing:1.5px;text-transform:uppercase;margin-top:-2px;}
+
+.nav{display:flex;gap:8px;flex-wrap:wrap;}
+.nav button{
+  border:none;background:var(--paper);color:var(--ink-soft);
+  padding:9px 16px;border-radius:999px;font-weight:700;font-size:14px;
+  box-shadow:0 2px 0 var(--shadow);
+  transition:transform .12s ease;
+}
+.nav button:hover{transform:translateY(-2px);}
+.nav button.active{background:var(--accent1);color:white;box-shadow:0 3px 0 color-mix(in srgb, var(--accent1) 60%, black 15%);}
+.nav .who{font-size:12px;color:var(--ink-soft);align-self:center;margin-right:4px;}
+.profile-btn{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border:1px solid #eadffc;background:var(--paper);color:var(--ink);
+  box-shadow:0 2px 0 var(--shadow);font-weight:700;font-size:13px;border-radius:999px;
+}
+.nav-avatar{
+  width:32px;height:32px;border-radius:50%;background:#f2e9ff;background-size:cover;background-position:center;
+  display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--accent4);font-weight:800;
+}
+@keyframes slideInFromRight{
+  from{opacity:0;transform:translateX(24px);}
+  to{opacity:1;transform:translateX(0);}
+}
+.slide-panel{animation:slideInFromRight .35s ease forwards;}
+
+.card-surface{
+  background:var(--paper);border-radius:22px;padding:24px;
+  box-shadow:0 10px 0 rgba(61,44,95,0.06), 0 2px 18px var(--shadow);
+}
+
+/* ---------- Buttons ---------- */
+.btn{
+  border:none;border-radius:14px;padding:11px 20px;font-weight:700;font-size:14.5px;
+  color:white;background:var(--accent1);box-shadow:0 4px 0 color-mix(in srgb, var(--accent1) 65%, black 18%);
+  transition:transform .1s ease;
+}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb, var(--accent1) 65%, black 18%);}
+.btn.secondary{background:var(--accent2);box-shadow:0 4px 0 color-mix(in srgb, var(--accent2) 65%, black 15%);}
+.btn.purple{background:var(--accent4);box-shadow:0 4px 0 color-mix(in srgb, var(--accent4) 65%, black 15%);}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:none;border:2px solid #eadffc;}
+.btn.danger{background:var(--danger);box-shadow:0 4px 0 #a52f47;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn.small{padding:7px 14px;font-size:13px;border-radius:10px;}
+.chip{
+  display:inline-block;border:2px solid #eadffc;background:white;color:var(--ink-soft);
+  padding:6px 13px;border-radius:999px;font-size:13px;font-weight:700;margin:3px 5px 3px 0;
+}
+.chip.on{background:var(--accent4);border-color:var(--accent4);color:white;}
+
+/* ---------- Forms ---------- */
+label{font-weight:700;font-size:13px;color:var(--ink-soft);display:block;margin:14px 0 5px;}
+input[type=text],input[type=email],input[type=password],textarea,select{
+  width:100%;padding:11px 13px;border-radius:12px;border:2px solid #eadffc;
+  font-family:'Quicksand',sans-serif;font-size:14.5px;color:var(--ink);background:#fffdfe;
+}
+input:focus,textarea:focus,select:focus{outline:3px solid color-mix(in srgb, var(--accent4) 35%, transparent);border-color:var(--accent4);}
+textarea{resize:vertical;min-height:90px;}
+.field-hint{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+.error-msg{background:#fde3e8;color:#a52f47;border-radius:10px;padding:10px 14px;font-weight:700;font-size:13.5px;margin-top:10px;}
+.oc-image-canvas{position:relative;border:2px solid #eadffc;border-radius:16px;overflow:hidden;background:#f7f0ff;min-height:260px;display:flex;align-items:center;justify-content:center;touch-action:none;}
+.oc-image-canvas img.oc-img-preview{width:100%;max-height:360px;object-fit:contain;display:block;}
+.image-layer{position:absolute;width:64px;height:64px;object-fit:contain;cursor:pointer;z-index:2;user-drag:none;-webkit-user-drag:none;}
+.image-layer.selected-layer{outline:3px solid var(--accent4);box-shadow:0 0 0 4px rgba(141, 71, 255, 0.18);z-index:5;}
+.caption-overlay{position:absolute;bottom:12px;left:12px;right:12px;padding:10px 12px;background:rgba(255,255,255,.85);color:var(--ink);border-radius:14px;font-weight:700;box-shadow:0 3px 8px rgba(0,0,0,.12);pointer-events:none;}
+.sticker-adjust-panel{margin-top:14px;padding:14px 16px;border:1px solid #e5d8ff;border-radius:16px;background:#fbf6ff;}
+.sticker-adjust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.sticker-adjust-info{margin-top:10px;font-size:13px;color:var(--ink-soft);}
+.success-msg{background:#dcf7ec;color:#0e7d5a;border-radius:10px;padding:10px 14px;font-weight:700;font-size:13.5px;margin-top:10px;}
+
+/* ---------- Auth screen ---------- */
+.auth-wrap{display:flex;justify-content:center;align-items:center;min-height:80vh;}
+.auth-box{width:100%;max-width:420px;position:relative;}
+.auth-box::before{
+  content:'';position:absolute;top:-14px;left:50%;transform:translateX(-50%) rotate(-4deg);
+  width:70px;height:22px;background:color-mix(in srgb, var(--accent3) 55%, white);
+  opacity:.85;border-radius:3px;box-shadow:0 2px 4px var(--shadow);
+}
+.auth-tabs{display:flex;gap:8px;margin-bottom:18px;}
+.auth-tabs button{flex:1;padding:10px;border-radius:12px;border:none;font-weight:700;background:#f2e9ff;color:var(--ink-soft);}
+.auth-tabs button.active{background:var(--accent4);color:white;}
+.pronoun-chips,.gender-chips{margin-bottom:6px;}
+
+/* Envelope verification modal look */
+.envelope{
+  background:linear-gradient(135deg,#fff,#fef6ff);border:2px dashed var(--accent4);
+  border-radius:16px;padding:22px;text-align:center;margin-top:14px;
+}
+.code-display{
+  font-family:'Space Mono',monospace;font-size:30px;letter-spacing:10px;
+  color:var(--accent4);font-weight:700;margin:10px 0;
+}
+
+/* ---------- Pinboard feed ---------- */
+.board-note{
+  background:#fff8e1;border-radius:12px;padding:12px 16px;font-size:13.5px;color:#7a5c00;
+  margin-bottom:18px;box-shadow:0 2px 8px var(--shadow);
+}
+.pinboard{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:26px;
+  padding-top:8px;
+}
+.pin-card{
+  background:var(--paper);border-radius:4px 4px 10px 10px;padding:12px 12px 16px;
+  box-shadow:0 10px 22px var(--shadow);position:relative;cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.pin-card:hover{transform:translateY(-6px) rotate(0deg) !important;box-shadow:0 16px 26px var(--shadow);}
+.pin-card .pushpin{
+  position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  width:20px;height:20px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, #fff, var(--accent1) 60%, #b23a5e);
+  box-shadow:0 3px 4px var(--shadow);
+}
+.pin-card .tape{
+  position:absolute;top:6px;right:10px;width:46px;height:16px;
+  background:color-mix(in srgb, var(--accent2) 45%, white);opacity:.8;
+  transform:rotate(6deg);border-radius:2px;
+}
+.pin-card img.thumb{width:100%;height:170px;object-fit:cover;border-radius:8px;background:#f2e9ff;}
+.pin-card h3{margin:10px 0 2px;font-size:17px;}
+.pin-card .byline{font-size:12px;color:var(--ink-soft);font-weight:700;}
+.pin-card .mini-tags{margin-top:6px;}
+.pin-card .mini-tags span{
+  font-size:11px;background:#f2e9ff;color:var(--accent4);padding:2px 8px;border-radius:999px;font-weight:700;margin-right:4px;
+}
+.pin-card .stats-row{display:flex;gap:14px;margin-top:8px;font-size:12.5px;color:var(--ink-soft);font-weight:700;}
+.empty-state{text-align:center;padding:50px 20px;color:var(--ink-soft);}
+.empty-state .big-emoji{font-size:44px;display:block;margin-bottom:10px;}
+
+/* ---------- OC background themes (used on card hero + modal) ---------- */
+.bg-none{background:linear-gradient(160deg,#f2e9ff,#fff);}
+.bg-starrynight{background:radial-gradient(circle at 15% 20%,#fff 1px,transparent 1.5px) 0 0/40px 40px, radial-gradient(circle at 60% 70%,#fff 1px,transparent 1.5px) 10px 15px/50px 50px, radial-gradient(circle at 80% 30%,#fff 1px,transparent 1.5px) 0 0/60px 60px, linear-gradient(160deg,#0b1237,#1c1750 60%,#3a2166);}
+.bg-sakura{background:linear-gradient(160deg,#ffe3ef,#ffc4dd 50%,#ffe9f4);}
+.bg-cyber{background:repeating-linear-gradient(0deg, rgba(0,255,240,.15) 0 1px, transparent 1px 26px), repeating-linear-gradient(90deg, rgba(0,255,240,.15) 0 1px, transparent 1px 26px), linear-gradient(160deg,#0a0a1a,#170a2e);}
+.bg-meadow{background:linear-gradient(180deg,#bdeaff 0%,#bdeaff 55%,#c7f0a5 55%,#8fd67e 100%);}
+.bg-deepsea{background:radial-gradient(circle at 30% 80%, rgba(255,255,255,.25) 0 4px, transparent 5px) 0 0/70px 70px, linear-gradient(180deg,#053a52,#012338);}
+.bg-sunset{background:linear-gradient(180deg,#3a1c5e 0%,#a8397a 40%,#f2765f 70%,#ffd27a 100%);}
+.bg-cottoncandy{background:linear-gradient(120deg,#c9e7ff,#ffd6f0 45%,#e3d1ff);}
+.bg-pride{background:linear-gradient(180deg,#ff5f6d 0 16.6%,#ff9a56 16.6% 33.2%,#ffd83f 33.2% 49.8%,#5ad18a 49.8% 66.4%,#4aa9ff 66.4% 83%,#a06bff 83% 100%);}
+
+.oc-hero{
+  border-radius:16px;padding:26px;min-height:220px;display:flex;align-items:flex-end;position:relative;overflow:hidden;
+}
+.oc-hero img{max-width:100%;max-height:320px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);border:5px solid white;}
+.bg-swatches{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;}
+.bg-swatch{
+  width:64px;height:44px;border-radius:8px;border:3px solid transparent;position:relative;font-size:10px;
+  color:white;text-shadow:0 1px 2px rgba(0,0,0,.5);display:flex;align-items:flex-end;padding:3px 5px;font-weight:700;
+}
+.bg-swatch.selected{border-color:var(--accent4);}
+
+/* ---------- Modal ---------- */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(61,44,95,.45);backdrop-filter:blur(2px);
+  display:flex;align-items:center;justify-content:center;padding:20px;z-index:100;
+}
+.modal{
+  background:var(--paper);border-radius:22px;max-width:640px;width:100%;max-height:88vh;overflow-y:auto;
+  padding:0;box-shadow:0 20px 50px rgba(0,0,0,.35);
+}
+.modal-close{
+  position:sticky;top:12px;left:100%;transform:translateX(-46px);width:34px;height:34px;border-radius:50%;
+  background:white;border:none;font-size:16px;font-weight:700;box-shadow:0 2px 6px var(--shadow);z-index:2;
+}
+.modal-body{padding:0 26px 26px;margin-top:-30px;}
+.oc-title-row{display:flex;justify-content:space-between;align-items:flex-start;margin-top:14px;flex-wrap:wrap;gap:8px;}
+.oc-title-row h2{margin:0;font-size:26px;}
+.tag-row span{
+  display:inline-block;background:#f2e9ff;color:var(--accent4);font-weight:700;font-size:12px;
+  padding:4px 11px;border-radius:999px;margin:4px 6px 0 0;
+}
+.desc-box{
+  background:#fbf7ff;border-radius:14px;padding:16px 18px;margin-top:14px;font-size:14.5px;line-height:1.6;
+  white-space:pre-wrap;
+}
+.date-stamp{
+  font-family:'Space Mono',monospace;font-size:11.5px;color:var(--ink-soft);margin-top:8px;display:inline-block;
+  background:#f2e9ff;padding:3px 10px;border-radius:6px;
+}
+.like-row{display:flex;align-items:center;gap:10px;margin-top:16px;}
+.like-btn{
+  border:none;background:#ffeef4;color:var(--danger);font-weight:800;padding:9px 18px;border-radius:999px;font-size:14px;
+  box-shadow:0 3px 0 #f3c3d0;
+}
+.like-btn.liked{background:var(--danger);color:white;box-shadow:0 3px 0 #8f2f47;}
+.sticker-strip{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+.sticker-strip img{width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25));}
+
+/* ---------- Comments ---------- */
+.comments{margin-top:22px;border-top:2px dashed #eadffc;padding-top:16px;}
+.comment{background:#fbf7ff;border-radius:12px;padding:10px 14px;margin-bottom:10px;}
+.comment .cwho{font-weight:800;font-size:13px;color:var(--accent4);}
+.comment .cwhen{font-size:11px;color:var(--ink-soft);font-family:'Space Mono',monospace;}
+.comment p{margin:4px 0 0;font-size:13.5px;}
+.comment-form{display:flex;gap:8px;margin-top:12px;}
+.comment-form input{flex:1;}
+
+/* ---------- My OCs grid + form ---------- */
+.section-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.oc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:20px;}
+.oc-mini{background:var(--paper);border-radius:16px;padding:12px;box-shadow:0 3px 14px var(--shadow);text-align:center;}
+.oc-mini img{width:100%;height:130px;object-fit:cover;border-radius:10px;background:#f2e9ff;}
+.oc-mini h4{margin:8px 0 4px;font-size:15px;}
+.oc-mini .mini-actions{display:flex;gap:6px;justify-content:center;margin-top:8px;}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;}
+@media (max-width:640px){.form-grid{grid-template-columns:1fr;}}
+.avatar-preview,.oc-img-preview{
+  width:100%;max-width:220px;border-radius:14px;margin-top:8px;background:#f2e9ff;object-fit:cover;
+}
+.upload-btn{
+  display:inline-block;background:#f2e9ff;color:var(--accent4);border:2px dashed var(--accent4);
+  padding:10px 16px;border-radius:12px;font-weight:700;font-size:13.5px;text-align:center;cursor:pointer;
+}
+.upload-btn input{display:none;}
+
+/* ---------- Sticker sheet page ---------- */
+.sticker-sheet{
+  background:repeating-linear-gradient(45deg, #fdf9ff, #fdf9ff 14px, #f6ecff 14px, #f6ecff 15px);
+  border-radius:20px;padding:24px;border:3px dashed #d9c4f5;
+}
+.sticker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:18px;margin-top:16px;}
+.sticker-slot{
+  background:white;border-radius:50%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 10px var(--shadow);position:relative;padding:10px;
+  border:3px dashed #e8d9fb;
+}
+.sticker-slot img{max-width:100%;max-height:100%;object-fit:contain;}
+.sticker-slot .del{
+  position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;background:var(--danger);
+  color:white;border:none;font-size:12px;font-weight:700;
+}
+
+/* ---------- Appearance / theme picker ---------- */
+.theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-top:10px;}
+.theme-swatch{
+  border-radius:16px;padding:14px;cursor:pointer;border:3px solid transparent;color:white;font-weight:800;font-size:13px;
+  box-shadow:0 4px 10px var(--shadow);
+}
+.theme-swatch.selected{border-color:var(--ink);}
+.swatch-dots span{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:3px;border:2px solid rgba(255,255,255,.6);}
+
+.footer-note{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:40px;padding-bottom:10px;}
+.pronoun-note{background:#eefaf3;border-radius:12px;padding:10px 14px;font-size:12.5px;color:#0e7d5a;margin:8px 0 12px;font-weight:600;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =========================================================
+   ProjectRabs — a client-side community corkboard for OCs
+   Data persists via window.storage (shared across all users).
+   Session (who's logged in) lives only in memory — refreshing
+   the page logs you out, since there's no real server here.
+   ========================================================= */
+
+let currentUser = null;   // {email, displayName, pronouns, gender, bio, avatar, themePref}
+let screen = 'auth';      // 'auth' | 'app'
+let tab = 'feed';         // 'feed' | 'myocs' | 'stickers' | 'profile' | 'appearance' | 'oc-form'
+let authMode = 'login';   // 'login' | 'signup' | 'verify'
+let editingOC = null;     // oc object being created/edited, or null
+let openOC = null;        // oc currently shown in modal
+let authError = '';
+let authSuccess = '';
+let ocFormError = '';
+
+const THEMES = {
+  bubblegum: {name:'Bubblegum', bg:'#FBF3FF', accent1:'#FF6FA5', accent2:'#2EC4B6', accent3:'#FFD23F', accent4:'#6C5CE7', ink:'#3D2C5F'},
+  ocean:     {name:'Ocean Pop', bg:'#EEFBFF', accent1:'#00B4D8', accent2:'#0077B6', accent3:'#FFD23F', accent4:'#5AD1B0', ink:'#083B4C'},
+  sunshine:  {name:'Sunshine', bg:'#FFFBEA', accent1:'#FFB703', accent2:'#FB8500', accent3:'#8ECAE6', accent4:'#E85D75', ink:'#5A3E00'},
+  pride:     {name:'Pride Rainbow', bg:'#FFF6FB', accent1:'#FF5F6D', accent2:'#4AA9FF', accent3:'#FFD83F', accent4:'#A06BFF', ink:'#3D2C5F'},
+  galaxy:    {name:'Galaxy', bg:'#F3F0FF', accent1:'#B983FF', accent2:'#5E60CE', accent3:'#FFD23F', accent4:'#FF6FA5', ink:'#241E4E'},
+  meadow:    {name:'Meadow', bg:'#F3FFEF', accent1:'#7BC950', accent2:'#2EC4B6', accent3:'#FFD23F', accent4:'#FF9F6C', ink:'#254D1F'},
+};
+const BG_THEMES = [
+  {id:'none', label:'Plain Paper', cls:'bg-none'},
+  {id:'starrynight', label:'Starry Night', cls:'bg-starrynight'},
+  {id:'sakura', label:'Sakura Dream', cls:'bg-sakura'},
+  {id:'cyber', label:'Cyber Grid', cls:'bg-cyber'},
+  {id:'meadow', label:'Meadow', cls:'bg-meadow'},
+  {id:'deepsea', label:'Deep Sea', cls:'bg-deepsea'},
+  {id:'sunset', label:'Sunset Dunes', cls:'bg-sunset'},
+  {id:'cottoncandy', label:'Cotton Candy', cls:'bg-cottoncandy'},
+  {id:'pride', label:'Pride Stripes', cls:'bg-pride'},
+];
+const PRONOUN_OPTS = ['she/her','he/him','they/them','she/they','he/they','xe/xem','ze/zir','it/its','any pronouns','ask me'];
+const GENDER_OPTS = ['Woman','Man','Non-binary','Genderfluid','Agender','Genderqueer','Trans woman','Trans man','Two-Spirit','Questioning','Prefer not to say'];
+
+function applyTheme(key){
+  const t = THEMES[key] || THEMES.bubblegum;
+  const r = document.documentElement.style;
+  r.setProperty('--bg', t.bg);
+  r.setProperty('--accent1', t.accent1);
+  r.setProperty('--accent2', t.accent2);
+  r.setProperty('--accent3', t.accent3);
+  r.setProperty('--accent4', t.accent4);
+  r.setProperty('--ink', t.ink);
+}
+
+function esc(s){
+  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function nl2br(s){ return esc(s).replace(/\n/g,'<br>'); }
+function formatDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}) + ' at ' +
+         d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+}
+function hashStr(s){ let h=0; for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;} return h; }
+function cardRotation(id){ return (Math.abs(hashStr(id)) % 7) - 3; } // -3..3 deg
+function simpleObscure(pw){ return btoa(unescape(encodeURIComponent('salt-oc-haven::'+pw))); }
+function uid(){ return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8); }
+
+function fileToResizedDataURL(file, maxDim){
+  return new Promise((resolve, reject)=>{
+    if(!file) return resolve(null);
+    if(file.size > 8*1024*1024) return reject(new Error('That image is a bit too large (max ~8MB). Try a smaller file.'));
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let {width,height} = img;
+        if(width > maxDim || height > maxDim){
+          if(width>height){ height = Math.round(height*maxDim/width); width = maxDim; }
+          else { width = Math.round(width*maxDim/height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img,0,0,width,height);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = ()=>reject(new Error('Could not read that image file.'));
+      img.src = reader.result;
+    };
+    reader.onerror = ()=>reject(new Error('Could not read that file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---------------- storage helpers (all shared, since this app has its own login system) ---------------- */
+async function sGet(key){
+  try{
+    if(window.storage && typeof window.storage.get === 'function'){
+      const r = await window.storage.get(key, true);
+      return r ? JSON.parse(r.value) : null;
+    }
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : null;
+  }
+  catch(e){ return null; }
+}
+async function sSet(key, val){
+  try{
+    if(window.storage && typeof window.storage.set === 'function'){
+      return window.storage.set(key, JSON.stringify(val), true);
+    }
+    localStorage.setItem(key, JSON.stringify(val));
+    return true;
+  }catch(e){ return null; }
+}
+async function sDelete(key){
+  try{
+    if(window.storage && typeof window.storage.delete === 'function'){
+      return await window.storage.delete(key, true);
+    }
+    localStorage.removeItem(key);
+    return true;
+  }catch(e){ return null; }
+}
+async function sList(prefix){
+  try{
+    if(window.storage && typeof window.storage.list === 'function'){
+      const r = await window.storage.list(prefix, true);
+      return r ? r.keys : [];
+    }
+    const keys = [];
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith(prefix)) keys.push(k);
+    }
+    return keys;
+  }
+  catch(e){ return []; }
+}
+
+/* ---------------- render root ---------------- */
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = screen === 'auth' ? renderAuthScreen() : renderAppScreen();
+  attachHandlers();
+}
+
+/* ================= AUTH SCREEN ================= */
+function renderAuthScreen(){
+  let inner = '';
+  if(authMode === 'login'){
+    inner = `
+      <div class="auth-tabs">
+        <button data-auth-tab="login" class="active">Log in</button>
+        <button data-auth-tab="signup">Sign up</button>
+      </div>
+      <form id="login-form">
+        <label>Username</label>
+        <input type="text" name="email" required placeholder="your username">
+        <label>Password</label>
+        <input type="password" name="password" required placeholder="••••••••">
+        ${authError ? `<div class="error-msg">${esc(authError)}</div>` : ''}
+        ${authSuccess ? `<div class="success-msg">${esc(authSuccess)}</div>` : ''}
+        <button class="btn" style="width:100%;margin-top:18px;" type="submit">Log in</button>
+      </form>`;
+  } else if(authMode === 'signup'){
+    inner = `
+      <div class="auth-tabs">
+        <button data-auth-tab="login">Log in</button>
+        <button data-auth-tab="signup" class="active">Sign up</button>
+      </div>
+      <form id="signup-form">
+        <label>Display name</label>
+        <input type="text" name="displayName" required maxlength="30" placeholder="What should we call you?">
+        <label>Username</label>
+        <input type="text" name="email" required placeholder="your username">
+        <label>Password</label>
+        <input type="password" name="password" required minlength="6" placeholder="At least 6 characters">
+        ${authError ? `<div class="error-msg">${esc(authError)}</div>` : ''}
+        <button class="btn secondary" style="width:100%;margin-top:18px;" type="submit">Create account</button>
+      </form>`;
+  }
+  return `
+    <div class="auth-wrap">
+      <div class="auth-box card-surface">
+        <div style="text-align:center;margin-bottom:14px;">
+          <div class="brand-badge" style="margin:0 auto 8px;">🎨</div>
+          <h1 style="margin:0;">ProjectRabs</h1>
+          <div style="font-size:12.5px;color:var(--ink-soft);font-weight:700;letter-spacing:1px;">A CORKBOARD FOR YOUR CHARACTERS</div>
+        </div>
+        <div class="pronoun-note">🏳️‍🌈 ProjectRabs is an LGBTQIA+ inclusive space — every profile lets you set your own pronouns and gender, your way.</div>
+        ${inner}
+      </div>
+    </div>`;
+}
+
+/* ================= APP SHELL ================= */
+function renderAppScreen(){
+  const tabs = [
+    ['feed','🧵 Feed'],['myocs','🗂️ My OCs'],['stickers','✨ Stickers'],['settings','⚙️ Settings']
+  ];
+  let body = '';
+  if(tab==='feed') body = renderFeedTab();
+  else if(tab==='myocs') body = renderMyOCsTab();
+  else if(tab==='oc-form') body = renderOCFormTab();
+  else if(tab==='stickers') body = renderStickersTab();
+  else if(tab==='settings') body = renderSettingsTab();
+
+  return `
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-badge">🎨</div>
+        <div><h1>ProjectRabs</h1><span class="tag">a corkboard for your characters</span></div>
+      </div>
+      <div class="nav">
+        <span class="who">Hi, ${esc(currentUser.displayName)} 👋</span>
+        ${tabs.map(([id,label])=>`<button data-tab="${id}" class="${tab===id||(id==='myocs'&&tab==='oc-form')?'active':''}">${label}</button>`).join('')}
+        <button class="profile-btn" data-tab="settings" title="Open Settings">
+          <span class="nav-avatar" style="${currentUser.avatar?`background-image:url(${currentUser.avatar});`:''}">${currentUser.avatar ? '' : esc((currentUser.displayName||'P').slice(0,1))}</span>
+          <span>${esc(currentUser.displayName)}</span>
+        </button>
+        <button id="logout-btn" class="btn danger small">Log out</button>
+      </div>
+    </div>
+    <div id="tab-body">${body}</div>
+    <div class="footer-note">ProjectRabs is a self-contained demo — data lives in this page's shared storage, not a real server. Refreshing logs you out, but your OCs, stickers, likes and comments stay put. 💜</div>
+  `;
+}
+
+/* ================= FEED ================= */
+let feedCache = [];
+let feedSearchQuery = '';
+async function loadFeed(){
+  const keys = await sList('oc:');
+  const ocs = [];
+  for(const k of keys){
+    const oc = await sGet(k);
+    if(oc) ocs.push(oc);
+  }
+  ocs.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+  feedCache = ocs;
+}
+function matchesSearch(oc, q){
+  if(!q) return true;
+  q = q.toLowerCase();
+  return (oc.name||'').toLowerCase().includes(q)
+    || (oc.ownerName||'').toLowerCase().includes(q)
+    || (oc.pronouns||'').toLowerCase().includes(q)
+    || (oc.gender||'').toLowerCase().includes(q)
+    || (oc.desc||'').toLowerCase().includes(q);
+}
+function renderFeedTab(){
+  const ocs = feedCache.filter(oc=>matchesSearch(oc, feedSearchQuery));
+  return `
+    <div class="board-note">📌 Everyone's characters, pinned up in one place. Click any card to read the full story, like it, or leave a comment.</div>
+    <div style="position:relative;margin-bottom:18px;">
+      <input type="text" id="feed-search" placeholder="🔍 Search by character name or creator..." value="${esc(feedSearchQuery)}" style="max-width:420px;">
+    </div>
+    ${ocs.length===0 ? `
+      <div class="empty-state">
+        <span class="big-emoji">🖇️</span>
+        ${feedSearchQuery ? `No characters or creators matched "${esc(feedSearchQuery)}".` : `Nothing's pinned up yet. Head to <b>My OCs</b> and post your first character!`}
+      </div>` : `
+    <div class="pinboard">
+      ${ocs.map(oc=>renderPinCard(oc)).join('')}
+    </div>`}
+  `;
+}
+function renderPinCard(oc){
+  const rot = cardRotation(oc.id);
+  const likeCount = (oc.likes||[]).length;
+  const commentCount = (oc.comments||[]).length;
+  return `
+  <div class="pin-card" style="transform:rotate(${rot}deg);" data-open-oc="${oc.id}">
+    <div class="pushpin"></div>
+    <div class="tape"></div>
+    ${oc.image ? `<img class="thumb" src="${oc.image}">` : `<div class="thumb oc-hero ${bgClass(oc.bgTheme)}" style="min-height:170px;"></div>`}
+    <h3>${esc(oc.name)}</h3>
+    <div class="byline">by ${esc(oc.ownerName)}</div>
+    <div class="mini-tags">${oc.pronouns?`<span>${esc(oc.pronouns)}</span>`:''}${oc.gender?`<span>${esc(oc.gender)}</span>`:''}</div>
+    <div class="stats-row"><span>❤️ ${likeCount}</span><span>💬 ${commentCount}</span></div>
+  </div>`;
+}
+function bgClass(id){ const f = BG_THEMES.find(b=>b.id===id); return f ? f.cls : 'bg-none'; }
+
+/* ================= OC MODAL ================= */
+function renderOCModal(){
+  if(!openOC) return '';
+  const oc = openOC;
+  const isOwner = currentUser && oc.owner === currentUser.email;
+  const liked = currentUser && (oc.likes||[]).includes(currentUser.email);
+  return `
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal">
+      <div class="oc-hero ${bgClass(oc.bgTheme)}" style="border-radius:22px 22px 0 0;justify-content:center;position:relative;overflow:hidden;min-height:240px;">
+        <button class="modal-close" id="close-modal">✕</button>
+        ${oc.image ? `
+          <div class="oc-image-canvas" style="width:100%;height:100%;position:relative;">
+            <img src="${oc.image}" style="width:100%;height:auto;border-radius:0;display:block;">
+            ${(oc.stickerLayers||[]).map(layer=>`
+              <img src="${layer.src}" class="image-layer" style="left:${layer.x}%;top:${layer.y}%;pointer-events:none;">`).join('')}
+            ${oc.caption ? `<div class="caption-overlay">${esc(oc.caption)}</div>` : ''}
+          </div>` : ''}
+      </div>
+      <div class="modal-body">
+        <div class="oc-title-row">
+          <h2>${esc(oc.name)}</h2>
+          ${isOwner ? `
+            <div style="display:flex;gap:6px;">
+              <button class="btn small" id="edit-oc-btn">Edit</button>
+              <button class="btn small danger" id="delete-oc-btn">Delete</button>
+            </div>` : ''}
+        </div>
+        <div class="byline">Created by ${esc(oc.ownerName)}</div>
+        <div class="tag-row">
+          ${oc.pronouns?`<span>${esc(oc.pronouns)}</span>`:''}
+          ${oc.gender?`<span>${esc(oc.gender)}</span>`:''}
+        </div>
+        <div><span class="date-stamp">📌 posted ${formatDate(oc.createdAt)}</span></div>
+        ${oc.stickers && oc.stickers.length ? `<div class="sticker-strip">${oc.stickers.map(s=>`<img src="${s}">`).join('')}</div>` : ''}
+        <div class="desc-box">${nl2br(oc.desc)}</div>
+        <div class="like-row">
+          <button class="btn like-btn ${liked?'liked':''}" id="like-btn">❤️ ${liked?'Liked':'Like'} (${(oc.likes||[]).length})</button>
+        </div>
+        <div class="comments">
+          <h3 style="margin:0 0 10px;font-size:16px;">💬 Comments (${(oc.comments||[]).length})</h3>
+          ${(oc.comments||[]).map(c=>`
+            <div class="comment">
+              <span class="cwho">${esc(c.name)}</span> <span class="cwhen">· ${formatDate(c.date)}</span>
+              <p>${nl2br(c.text)}</p>
+            </div>`).join('') || `<p style="color:var(--ink-soft);font-size:13.5px;">No comments yet — be the first to say hi!</p>`}
+          <form class="comment-form" id="comment-form">
+            <input type="text" name="text" maxlength="300" placeholder="Say something nice..." required>
+            <button class="btn secondary small" type="submit">Post</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ================= MY OCs ================= */
+let myOCsCache = [];
+async function loadMyOCs(){
+  myOCsCache = feedCache.filter(oc => oc.owner === currentUser.email);
+}
+function renderMyOCsTab(){
+  return `
+    <div class="card-surface">
+      <div class="section-header">
+        <h2 style="margin:0;">🗂️ My OCs <span style="font-size:13px;color:var(--ink-soft);font-weight:600;">(${myOCsCache.length} — create as many as you like!)</span></h2>
+        <button class="btn purple" id="new-oc-btn">+ New OC</button>
+      </div>
+      ${myOCsCache.length===0 ? `
+        <div class="empty-state"><span class="big-emoji">🎨</span>You haven't posted any characters yet.</div>
+      ` : `
+        <div class="oc-grid">
+          ${myOCsCache.map(oc=>`
+            <div class="oc-mini">
+              ${oc.image?`<img src="${oc.image}">`:`<div class="oc-hero ${bgClass(oc.bgTheme)}" style="height:130px;border-radius:10px;"></div>`}
+              <h4>${esc(oc.name)}</h4>
+              <div class="mini-actions">
+                <button class="btn small" data-open-oc="${oc.id}">View</button>
+                <button class="btn small secondary" data-edit-oc="${oc.id}">Edit</button>
+              </div>
+            </div>`).join('')}
+        </div>`}
+    </div>`;
+}
+
+/* ================= OC FORM (create/edit) ================= */
+async function loadStickerLib(){
+  const s = await sGet('stickers:'+currentUser.email);
+  return s || [];
+}
+let stickerLibCache = [];
+let formSelectedStickers = [];
+let formStickerLayers = [];
+let selectedStickerId = null;
+let formImageCaption = '';
+let formImageData = null;
+let formBgTheme = 'none';
+
+function renderOCFormTab(){
+  const oc = editingOC;
+  if(oc && formStickerLayers.length === 0){
+    formStickerLayers = oc.stickerLayers ? [...oc.stickerLayers] : (oc.stickers || []).map((src,i)=>({id:uid(),src,x:16+14*i,y:12+10*i}));
+    formImageCaption = oc.caption || '';
+    formImageData = oc.image || formImageData;
+  }
+  formBgTheme = oc ? oc.bgTheme : formBgTheme;
+  return `
+    <div class="card-surface">
+      <h2 style="margin-top:0;">${oc ? '✏️ Edit' : '✨ New'} Character</h2>
+      <form id="oc-form">
+        <div class="form-grid">
+          <div>
+            <label>Name</label>
+            <input type="text" name="name" required maxlength="40" value="${oc?esc(oc.name):''}" placeholder="Character's name">
+            <label>Pronouns</label>
+            <div class="pronoun-chips">${PRONOUN_OPTS.map(p=>`<span class="chip" data-chip-target="oc-pronouns" data-val="${esc(p)}">${p}</span>`).join('')}</div>
+            <input type="text" name="pronouns" id="oc-pronouns" maxlength="40" value="${oc?esc(oc.pronouns||''):''}" placeholder="Pick a chip above or type your own">
+            <label>Gender</label>
+            <div class="gender-chips">${GENDER_OPTS.map(g=>`<span class="chip" data-chip-target="oc-gender" data-val="${esc(g)}">${g}</span>`).join('')}</div>
+            <input type="text" name="gender" id="oc-gender" maxlength="40" value="${oc?esc(oc.gender||''):''}" placeholder="Pick a chip above or type your own">
+          </div>
+          <div>
+            <label>Character image</label>
+            <label class="upload-btn">📷 Choose image<input type="file" accept="image/*" id="oc-image-input"></label>
+            <div class="oc-image-canvas" id="oc-image-canvas" style="margin-top:14px;">
+              <img id="oc-image-preview" class="oc-img-preview" src="${oc&&oc.image?oc.image:''}" style="display:${oc&&oc.image?'block':'none'}">
+              ${formStickerLayers.map(layer=>`
+                <img src="${layer.src}" class="image-layer${selectedStickerId===layer.id?' selected-layer':''}" data-layer-id="${layer.id}"
+                  style="left:${layer.x}%;top:${layer.y}%;" draggable="false">`).join('')}
+              <div class="caption-overlay">${esc(formImageCaption)}</div>
+            </div>
+            <label>Image caption</label>
+            <input type="text" name="imageCaption" id="oc-image-caption" value="${esc(formImageCaption)}" maxlength="80" placeholder="Add a caption to the character image">
+            <label>Background theme</label>
+            <div class="bg-swatches" id="bg-swatches">
+              ${BG_THEMES.map(b=>`<div class="bg-swatch ${b.cls} ${((oc?oc.bgTheme:'none')===b.id)?'selected':''}" data-bg="${b.id}">${b.label}</div>`).join('')}
+            </div>
+          </div>
+        </div>
+        <label>Description / backstory</label>
+        <textarea name="desc" required maxlength="4000" placeholder="Tell us about this character...">${oc?esc(oc.desc):''}</textarea>
+
+        <label>Stickers from your sticker sheet ${stickerLibCache.length===0 ? '<span style="font-weight:500;">(add some on the Stickers page!)</span>' : '(click to add, then drag into position)'}</label>
+        <div class="sticker-grid" id="oc-sticker-picker">
+          ${stickerLibCache.map(s=>`
+            <div class="sticker-slot" data-sticker-add="${esc(s)}">
+              <img src="${s}">
+            </div>`).join('')}
+        </div>
+        ${formStickerLayers.length > 0 ? `
+        <div class="sticker-adjust-panel">
+          <h3>Sticker adjustment</h3>
+          <div class="sticker-adjust-grid">
+            <button type="button" class="btn small" id="sticker-move-up">↑</button>
+            <button type="button" class="btn small" id="sticker-move-left">←</button>
+            <button type="button" class="btn small" id="sticker-move-down">↓</button>
+            <button type="button" class="btn small" id="sticker-move-right">→</button>
+          </div>
+          <div class="sticker-adjust-info">Select a sticker in the preview above to move it.</div>
+        </div>
+        ` : ''}
+        <div style="margin-top:10px;color:var(--ink-soft);font-size:13px;">Use the controls above to adjust sticker placement after adding them.</div>
+
+        ${ocFormError ? `<div class="error-msg">${esc(ocFormError)}</div>` : ''}
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button class="btn purple" type="submit">${oc?'Save changes':'Pin to the board'}</button>
+          <button class="btn ghost" type="button" id="cancel-oc-form">Cancel</button>
+        </div>
+      </form>
+    </div>`;
+}
+
+/* ================= STICKERS ================= */
+function renderStickersTab(){
+  return `
+    <div class="sticker-sheet">
+      <div class="section-header">
+        <h2 style="margin:0;">✨ My Sticker Sheet</h2>
+        <label class="upload-btn">+ Upload sticker<input type="file" accept="image/*" id="sticker-upload"></label>
+      </div>
+      <p style="color:var(--ink-soft);font-size:13.5px;">Upload little PNGs (transparent backgrounds work best!) to decorate your OC pages with — think washi tape, stars, hearts, badges, anything that fits your character's vibe.</p>
+      ${stickerLibCache.length===0 ? `
+        <div class="empty-state"><span class="big-emoji">🧷</span>No stickers yet — upload your first one!</div>
+      ` : `
+      <div class="sticker-grid">
+        ${stickerLibCache.map((s,i)=>`
+          <div class="sticker-slot">
+            <img src="${s}">
+            <button class="del" data-del-sticker="${i}">✕</button>
+          </div>`).join('')}
+      </div>`}
+    </div>`;
+}
+
+/* ================= PROFILE ================= */
+function renderProfileTab(){
+  const u = currentUser;
+  return `
+    <div class="card-surface">
+      <h2 style="margin-top:0;">🙋 My Profile</h2>
+      <div class="pronoun-note">This is your space — describe yourself however feels right. Nothing here is required except your display name.</div>
+      <form id="profile-form">
+        <div class="form-grid">
+          <div>
+            <label>Display name</label>
+            <input type="text" name="displayName" required maxlength="30" value="${esc(u.displayName)}">
+            <label>Pronouns</label>
+            <div class="pronoun-chips">${PRONOUN_OPTS.map(p=>`<span class="chip" data-chip-target="profile-pronouns" data-val="${esc(p)}">${p}</span>`).join('')}</div>
+            <input type="text" name="pronouns" id="profile-pronouns" maxlength="40" value="${esc(u.pronouns||'')}" placeholder="Pick a chip or type your own">
+            <label>Gender</label>
+            <div class="gender-chips">${GENDER_OPTS.map(g=>`<span class="chip" data-chip-target="profile-gender" data-val="${esc(g)}">${g}</span>`).join('')}</div>
+            <input type="text" name="gender" id="profile-gender" maxlength="40" value="${esc(u.gender||'')}" placeholder="Pick a chip or type your own">
+          </div>
+          <div>
+            <label>Profile picture</label>
+            <label class="upload-btn">📷 Choose image<input type="file" accept="image/*" id="avatar-input"></label>
+            <div><img id="avatar-preview" class="avatar-preview" src="${u.avatar||''}" style="display:${u.avatar?'block':'none'};border-radius:50%;width:120px;height:120px;object-fit:cover;"></div>
+          </div>
+        </div>
+        <label>Bio</label>
+        <textarea name="bio" maxlength="500" placeholder="A little about you...">${esc(u.bio||'')}</textarea>
+        <button class="btn purple" style="margin-top:16px;" type="submit">Save profile</button>
+        <span id="profile-saved" style="display:none;color:#0e7d5a;font-weight:700;margin-left:10px;">Saved! ✅</span>
+      </form>
+    </div>`;
+}
+
+/* ================= APPEARANCE ================= */
+function renderAppearanceTab(){
+  return `
+    <div class="card-surface">
+      <h2 style="margin-top:0;">🎨 Website Appearance</h2>
+      <p style="color:var(--ink-soft);font-size:13.5px;">Pick a color theme for the whole site. It's saved to your profile.</p>
+      <div class="theme-grid">
+        ${Object.entries(THEMES).map(([key,t])=>`
+          <div class="theme-swatch ${currentUser.themePref===key?'selected':''}" data-theme="${key}"
+               style="background:linear-gradient(135deg, ${t.accent1}, ${t.accent4});">
+            ${t.name}
+            <div class="swatch-dots" style="margin-top:8px;">
+              <span style="background:${t.accent1}"></span><span style="background:${t.accent2}"></span><span style="background:${t.accent3}"></span><span style="background:${t.accent4}"></span>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderSettingsTab(){
+  return `
+    <div class="settings-panel slide-panel">
+      <div class="section-header" style="margin-bottom:20px;">
+        <div>
+          <h2 style="margin:0;">⚙️ Settings</h2>
+          <p style="margin:8px 0 0;color:var(--ink-soft);font-size:14px;">Manage your profile, appearance, and account options from one place.</p>
+        </div>
+      </div>
+      ${renderProfileTab()}
+      ${renderAppearanceTab()}
+    </div>`;
+}
+
+/* ================= EVENT HANDLERS ================= */
+function attachHandlers(){
+  if(screen === 'auth'){
+    document.querySelectorAll('[data-auth-tab]').forEach(b=>{
+      b.onclick = ()=>{ authMode = b.dataset.authTab; authError=''; render(); };
+    });
+    const loginForm = document.getElementById('login-form');
+    if(loginForm) loginForm.onsubmit = handleLogin;
+    const signupForm = document.getElementById('signup-form');
+    if(signupForm) signupForm.onsubmit = handleSignupRequest;
+    return;
+  }
+
+  // app shell
+  document.querySelectorAll('[data-tab]').forEach(b=>{
+    b.onclick = async ()=>{
+      tab = b.dataset.tab; editingOC=null; ocFormError=''; formSelectedStickers=[]; formImageData=null; formBgTheme='none';
+      if(tab==='myocs') await loadMyOCs();
+      if(tab==='stickers') stickerLibCache = await loadStickerLib();
+      render();
+    };
+  });
+  const logoutBtn = document.getElementById('logout-btn');
+  if(logoutBtn) logoutBtn.onclick = ()=>{ currentUser=null; screen='auth'; authMode='login'; authError=''; authSuccess='You have been logged out.'; render(); };
+
+  // feed
+  document.querySelectorAll('[data-open-oc]').forEach(el=>{
+    el.onclick = async ()=>{
+      const oc = feedCache.find(o=>o.id===el.dataset.openOc);
+      openOC = oc;
+      renderModalOnly();
+    };
+  });
+  wireFeedSearch();
+
+  // my ocs
+  const newOcBtn = document.getElementById('new-oc-btn');
+  if(newOcBtn) newOcBtn.onclick = ()=>{ editingOC=null; formSelectedStickers=[]; formStickerLayers=[]; formImageCaption=''; formImageData=null; formBgTheme='none'; ocFormError=''; tab='oc-form'; render(); };
+  document.querySelectorAll('[data-edit-oc]').forEach(el=>{
+    el.onclick = ()=>{
+      const oc = feedCache.find(o=>o.id===el.dataset.editOc);
+      editingOC = oc;
+      formStickerLayers = oc.stickerLayers ? [...oc.stickerLayers] : (oc.stickers || []).map((src,i)=>({id:uid(),src,x:16+14*i,y:12+10*i}));
+      formImageCaption = oc.caption || '';
+      formImageData = oc.image;
+      formBgTheme = oc.bgTheme;
+      tab='oc-form'; ocFormError=''; render();
+    };
+  });
+
+  // oc form
+  const ocForm = document.getElementById('oc-form');
+  if(ocForm){
+    document.querySelectorAll('.pronoun-chips .chip, .gender-chips .chip').forEach(chip=>{
+      chip.onclick = ()=>{
+        const targetInput = document.getElementById(chip.dataset.chipTarget);
+        targetInput.value = chip.dataset.val;
+      };
+    });
+    document.querySelectorAll('#bg-swatches .bg-swatch').forEach(sw=>{
+      sw.onclick = ()=>{ formBgTheme = sw.dataset.bg; document.querySelectorAll('#bg-swatches .bg-swatch').forEach(s=>s.classList.remove('selected')); sw.classList.add('selected'); };
+    });
+    document.querySelectorAll('[data-sticker-add]').forEach(slot=>{
+      slot.onclick = ()=>{
+        if(formStickerLayers.length >= 10) return;
+        const val = slot.dataset.stickerAdd;
+        const newLayer = {id:uid(), src: val, x:40, y:20};
+        formStickerLayers.push(newLayer);
+        selectedStickerId = newLayer.id;
+        render();
+      };
+    });
+    document.querySelectorAll('.image-layer').forEach(layer=>{
+      layer.onclick = ()=>{
+        selectedStickerId = layer.dataset.layerId;
+        render();
+      };
+    });
+    const captionInput = document.getElementById('oc-image-caption');
+    if(captionInput){
+      captionInput.oninput = ()=>{ formImageCaption = captionInput.value; const cap = document.querySelector('.caption-overlay'); if(cap) cap.textContent = formImageCaption; };
+    }
+    const imgInput = document.getElementById('oc-image-input');
+    if(imgInput) imgInput.onchange = async ()=>{
+      try{
+        const dataUrl = await fileToResizedDataURL(imgInput.files[0], 700);
+        formImageData = dataUrl;
+        const preview = document.getElementById('oc-image-preview');
+        preview.src = dataUrl; preview.style.display='block';
+      }catch(e){ ocFormError = e.message; render(); }
+    };
+
+    const adjustSticker = (dx, dy) => {
+      if(!selectedStickerId) return;
+      const layer = formStickerLayers.find(l=>l.id===selectedStickerId);
+      if(!layer) return;
+      layer.x = Math.max(0, Math.min(100, layer.x + dx));
+      layer.y = Math.max(0, Math.min(100, layer.y + dy));
+      render();
+    };
+    const moveUpBtn = document.getElementById('sticker-move-up');
+    const moveDownBtn = document.getElementById('sticker-move-down');
+    const moveLeftBtn = document.getElementById('sticker-move-left');
+    const moveRightBtn = document.getElementById('sticker-move-right');
+    if(moveUpBtn) moveUpBtn.onclick = ()=>adjustSticker(0, -2);
+    if(moveDownBtn) moveDownBtn.onclick = ()=>adjustSticker(0, 2);
+    if(moveLeftBtn) moveLeftBtn.onclick = ()=>adjustSticker(-2, 0);
+    if(moveRightBtn) moveRightBtn.onclick = ()=>adjustSticker(2, 0);
+    ocForm.onsubmit = handleOCFormSubmit;
+    const cancelBtn = document.getElementById('cancel-oc-form');
+    if(cancelBtn) cancelBtn.onclick = ()=>{ tab='myocs'; editingOC=null; render(); };
+  }
+
+  // stickers
+  const stickerUpload = document.getElementById('sticker-upload');
+  if(stickerUpload) stickerUpload.onchange = async ()=>{
+    try{
+      const dataUrl = await fileToResizedDataURL(stickerUpload.files[0], 220);
+      stickerLibCache.push(dataUrl);
+      await sSet('stickers:'+currentUser.email, stickerLibCache);
+      render();
+    }catch(e){ alert(e.message); }
+  };
+  document.querySelectorAll('[data-del-sticker]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const i = parseInt(btn.dataset.delSticker,10);
+      stickerLibCache.splice(i,1);
+      await sSet('stickers:'+currentUser.email, stickerLibCache);
+      render();
+    };
+  });
+
+  // profile
+  const profileForm = document.getElementById('profile-form');
+  if(profileForm){
+    document.querySelectorAll('.pronoun-chips .chip, .gender-chips .chip').forEach(chip=>{
+      chip.onclick = ()=>{ document.getElementById(chip.dataset.chipTarget).value = chip.dataset.val; };
+    });
+    const avatarInput = document.getElementById('avatar-input');
+    let newAvatar = null;
+    if(avatarInput) avatarInput.onchange = async ()=>{
+      try{
+        newAvatar = await fileToResizedDataURL(avatarInput.files[0], 300);
+        const preview = document.getElementById('avatar-preview');
+        preview.src = newAvatar; preview.style.display='block';
+      }catch(e){ alert(e.message); }
+    };
+    profileForm.onsubmit = async (e)=>{
+      e.preventDefault();
+      const fd = new FormData(profileForm);
+      currentUser.displayName = fd.get('displayName').trim();
+      currentUser.pronouns = fd.get('pronouns').trim();
+      currentUser.gender = fd.get('gender').trim();
+      currentUser.bio = fd.get('bio').trim();
+      if(newAvatar) currentUser.avatar = newAvatar;
+      await sSet('user:'+currentUser.email, currentUser);
+      // keep ownerName in sync on this user's existing OCs
+      for(const oc of feedCache.filter(o=>o.owner===currentUser.email)){
+        oc.ownerName = currentUser.displayName;
+        await sSet('oc:'+oc.id, oc);
+      }
+      await loadFeed();
+      document.getElementById('profile-saved').style.display='inline';
+      setTimeout(render, 700);
+    };
+  }
+
+  // appearance
+  document.querySelectorAll('[data-theme]').forEach(sw=>{
+    sw.onclick = async ()=>{
+      const key = sw.dataset.theme;
+      currentUser.themePref = key;
+      applyTheme(key);
+      await sSet('user:'+currentUser.email, currentUser);
+      render();
+    };
+  });
+
+  renderModalOnly();
+}
+
+function renderModalOnly(){
+  // remove any existing modal then re-add if needed
+  const existing = document.getElementById('modal-backdrop');
+  if(existing) existing.remove();
+  if(!openOC) return;
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = renderOCModal();
+  document.body.appendChild(wrapper.firstElementChild);
+
+  document.getElementById('close-modal').onclick = ()=>{ openOC=null; renderModalOnly(); };
+  document.getElementById('modal-backdrop').addEventListener('click', (e)=>{
+    if(e.target.id==='modal-backdrop'){ openOC=null; renderModalOnly(); }
+  });
+  const isOwner = currentUser && openOC.owner === currentUser.email;
+  if(isOwner){
+    const editBtn = document.getElementById('edit-oc-btn');
+    if(editBtn) editBtn.onclick = ()=>{
+      editingOC = openOC;
+      formStickerLayers = openOC.stickerLayers ? [...openOC.stickerLayers] : (openOC.stickers || []).map((src,i)=>({id:uid(),src,x:16+14*i,y:12+10*i}));
+      formImageCaption = openOC.caption || '';
+      formImageData=openOC.image; formBgTheme=openOC.bgTheme;
+      openOC=null; tab='oc-form'; ocFormError=''; render();
+    };
+    const delBtn = document.getElementById('delete-oc-btn');
+    if(delBtn) delBtn.onclick = async ()=>{
+      if(!confirm('Delete this character permanently? This can\'t be undone.')) return;
+      await sDelete('oc:'+openOC.id);
+      openOC=null;
+      await loadFeed(); await loadMyOCs();
+      render();
+    };
+  }
+  const likeBtn = document.getElementById('like-btn');
+  if(likeBtn) likeBtn.onclick = async ()=>{
+    if(!currentUser) return;
+    openOC.likes = openOC.likes || [];
+    const idx = openOC.likes.indexOf(currentUser.email);
+    if(idx>=0) openOC.likes.splice(idx,1); else openOC.likes.push(currentUser.email);
+    await sSet('oc:'+openOC.id, openOC);
+    await loadFeed();
+    openOC = feedCache.find(o=>o.id===openOC.id);
+    renderModalOnly();
+    // also refresh underlying feed card counts
+    const feedBody = document.getElementById('tab-body');
+    if(feedBody && tab==='feed') feedBody.innerHTML = renderFeedTab();
+    reattachFeedOpen();
+  };
+  const commentForm = document.getElementById('comment-form');
+  if(commentForm) commentForm.onsubmit = async (e)=>{
+    e.preventDefault();
+    const fd = new FormData(commentForm);
+    const text = fd.get('text').trim();
+    if(!text) return;
+    openOC.comments = openOC.comments || [];
+    openOC.comments.push({email:currentUser.email, name:currentUser.displayName, text, date:new Date().toISOString()});
+    await sSet('oc:'+openOC.id, openOC);
+    await loadFeed();
+    openOC = feedCache.find(o=>o.id===openOC.id);
+    renderModalOnly();
+  };
+}
+function wireFeedSearch(){
+  const input = document.getElementById('feed-search');
+  if(!input) return;
+  input.oninput = ()=>{
+    feedSearchQuery = input.value;
+    const caret = input.selectionStart;
+    const tabBody = document.getElementById('tab-body');
+    if(tabBody) tabBody.innerHTML = renderFeedTab();
+    reattachFeedOpen();
+    const freshInput = document.getElementById('feed-search');
+    if(freshInput){
+      freshInput.focus();
+      freshInput.setSelectionRange(caret, caret);
+      wireFeedSearch();
+    }
+  };
+}
+function reattachFeedOpen(){
+  document.querySelectorAll('[data-open-oc]').forEach(el=>{
+    el.onclick = ()=>{ openOC = feedCache.find(o=>o.id===el.dataset.openOc); renderModalOnly(); };
+  });
+}
+
+/* ================= AUTH LOGIC ================= */
+async function handleLogin(e){
+  e.preventDefault();
+  authError=''; authSuccess='';
+  const fd = new FormData(e.target);
+  const email = fd.get('email').trim().toLowerCase();
+  const password = fd.get('password');
+  const user = await sGet('user:'+email);
+  if(!user || user.passwordHash !== simpleObscure(password)){
+    authError = 'That account name and password combination doesn\'t match our records.';
+    render();
+    return;
+  }
+  currentUser = user;
+  applyTheme(user.themePref || 'bubblegum');
+  screen='app'; tab='feed';
+  await loadFeed();
+  render();
+}
+
+async function handleSignupRequest(e){
+  e.preventDefault();
+  authError=''; authSuccess='';
+  const fd = new FormData(e.target);
+  const displayName = fd.get('displayName').trim();
+  const email = fd.get('email').trim().toLowerCase();
+  const password = fd.get('password');
+  const existing = await sGet('user:'+email);
+  if(existing){
+    authError = 'An account with that name already exists — try logging in instead.';
+    render(); return;
+  }
+  const newUser = {
+    email, passwordHash: simpleObscure(password), displayName,
+    pronouns:'', gender:'', bio:'', avatar:'',
+    themePref:'bubblegum',
+    joinDate: new Date().toISOString()
+  };
+  await sSet('user:'+newUser.email, newUser);
+  currentUser = newUser;
+  applyTheme('bubblegum');
+  screen='app'; tab='feed'; authMode='login'; authError='';
+  await loadFeed();
+  render();
+}
+
+/* ================= OC FORM SUBMIT ================= */
+async function handleOCFormSubmit(e){
+  e.preventDefault();
+  ocFormError='';
+  const fd = new FormData(e.target);
+  const name = fd.get('name').trim();
+  const desc = fd.get('desc').trim();
+  const pronouns = fd.get('pronouns').trim();
+  const gender = fd.get('gender').trim();
+  const caption = fd.get('imageCaption').trim();
+  if(!name || !desc){ ocFormError='Please fill in a name and description.'; render(); return; }
+
+  if(editingOC){
+    editingOC.name=name; editingOC.desc=desc; editingOC.pronouns=pronouns; editingOC.gender=gender;
+    editingOC.bgTheme=formBgTheme; editingOC.stickerLayers=[...formStickerLayers];
+    editingOC.stickers=formStickerLayers.map(l=>l.src);
+    editingOC.caption=caption;
+    if(formImageData) editingOC.image = formImageData;
+    await sSet('oc:'+editingOC.id, editingOC);
+  } else {
+    const oc = {
+      id: uid(), owner: currentUser.email, ownerName: currentUser.displayName,
+      name, desc, pronouns, gender, image: formImageData, bgTheme: formBgTheme,
+      stickerLayers:[...formStickerLayers], stickers: formStickerLayers.map(l=>l.src), caption,
+      createdAt: new Date().toISOString(), likes:[], comments:[]
+    };
+    await sSet('oc:'+oc.id, oc);
+  }
+  editingOC=null; formImageData=null; formStickerLayers=[]; formImageCaption=''; formSelectedStickers=[]; formBgTheme='none';
+  await loadFeed(); await loadMyOCs();
+  tab='myocs';
+  render();
+}
+
+
+/* ================= INIT ================= */
+applyTheme('bubblegum');
+render();
+</script>
+</body>
+</html>
