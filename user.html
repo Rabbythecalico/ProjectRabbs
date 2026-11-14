@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ProjectRabs — User Portal</title>
+    <style>
+      :root {
+        --bg: #fdf7ff;
+        --panel: #ffffff;
+        --soft: #f3ecff;
+        --pink: #ff6fa5;
+        --purple: #6c5ce7;
+        --mint: #2ec4b6;
+        --gold: #ffd23f;
+        --ink: #2d2442;
+        --muted: #6c6288;
+        --danger: #d94c69;
+        --shadow: rgba(44, 29, 64, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(180deg, #fef7ff 0%, #f3ebff 100%);
+        color: var(--ink);
+      }
+
+      a { color: inherit; text-decoration: none; }
+      .container { max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid rgba(108,92,231,0.1);
+        border-radius: 18px;
+        padding: 16px 20px;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 8px 18px var(--shadow);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-weight: 800;
+      }
+
+      .brand-badge {
+        width: 42px; height: 42px;
+        border-radius: 50%;
+        display: grid; place-items: center;
+        background: linear-gradient(135deg, var(--pink), var(--purple));
+        color: white;
+        box-shadow: 0 8px 18px rgba(108,92,231,0.22);
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .nav a, .nav button {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 16px;
+        background: var(--soft);
+        color: var(--ink);
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .nav .primary {
+        background: var(--purple);
+        color: white;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 22px;
+        margin-top: 26px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border-radius: 24px;
+        box-shadow: 0 18px 36px var(--shadow);
+        padding: 24px;
+      }
+
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--purple);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      h1, h2, h3, h4 { margin-top: 0; }
+      h1 {
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        margin-bottom: 12px;
+      }
+      .hero p {
+        margin: 0 0 20px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .btn.primary { background: var(--purple); color: #fff; }
+      .btn.pink { background: var(--pink); color: #fff; }
+      .btn.soft { background: var(--soft); color: var(--ink); }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0,1fr));
+        gap: 14px;
+        margin-top: 20px;
+      }
+
+      .stat {
+        background: #fffafc;
+        border: 1px solid rgba(108,92,231,0.08);
+        border-radius: 18px;
+        padding: 18px 12px;
+        text-align: center;
+      }
+      .stat strong { display: block; font-size: 24px; }
+      .stat span { color: var(--muted); font-size: 12px; }
+
+      .profile-card {
+        background: linear-gradient(135deg, #fff9c7 0%, #f6e6ff 100%);
+        border-radius: 24px;
+        padding: 22px;
+        min-height: 240px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .avatar {
+        width: 76px; height: 76px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--pink), var(--purple));
+        display: grid; place-items: center; color: white;
+        font-size: 28px; font-weight: 800;
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .tag {
+        display: inline-block;
+        background: rgba(255,255,255,0.7);
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 8px 10px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 22px;
+        margin-top: 28px;
+      }
+
+      form {
+        display: grid;
+        gap: 14px;
+      }
+
+      .row { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+      label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      input, textarea {
+        width: 100%;
+        border: 2px solid rgba(108,92,231,0.12);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font: inherit;
+        background: #fff;
+        color: var(--ink);
+      }
+
+      textarea { min-height: 110px; resize: vertical; }
+
+      .feed {
+        display: grid;
+        gap: 16px;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 10px 18px rgba(16, 12, 32, 0.05);
+        border: 1px solid rgba(108,92,231,0.08);
+      }
+
+      .feed-card {
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        gap: 16px;
+      }
+
+      .thumb {
+        width: 100%; height: 100%; min-height: 100px;
+        display: grid; place-items: center;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #ffe0ef, #e7dcff);
+        font-size: 34px;
+      }
+
+      .meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+
+      .mini { color: var(--muted); font-size: 12px; }
+      .pill {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 6px 10px;
+        background: #f3ebff;
+        color: var(--purple);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      @media (max-width: 900px) {
+        .hero, .content-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-badge">🎨</div>
+          <div>ProjectRabs</div>
+        </div>
+        <nav class="nav">
+          <a href="index.html">Home</a>
+          <a href="user.html" class="primary">User</a>
+          <a href="admin.html">Admin</a>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <div class="panel">
+          <div class="eyebrow">User Dashboard</div>
+          <h1>Your character corner</h1>
+          <p>
+            Design original characters, add a personality profile, and pin your favorite creations to a living corkboard.
+          </p>
+
+          <div class="cta-row">
+            <button class="btn primary" type="button">Create OC</button>
+            <button class="btn soft" type="button">Browse feed</button>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <strong>12</strong>
+              <span>Ocs created</span>
+            </div>
+            <div class="stat">
+              <strong>98</strong>
+              <span>Likes</span>
+            </div>
+            <div class="stat">
+              <strong>8</strong>
+              <span>Comments</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="profile-card panel">
+          <div>
+            <div class="avatar">R</div>
+            <h3 style="margin: 14px 0 8px;">Rabby</h3>
+            <div class="mini">she/her • Artist</div>
+          </div>
+
+          <div>
+            <div class="tag-row">
+              <span class="tag">Fantasy</span>
+              <span class="tag">Soft pastel</span>
+              <span class="tag">OC maker</span>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="content-grid">
+        <div class="panel">
+          <h2>New profile</h2>
+          <form id="ocForm">
+            <div class="row">
+              <label>
+                Character name
+                <input type="text" id="name" value="Violet Frost" />
+              </label>
+              <label>
+                Pronouns
+                <input type="text" id="pronouns" value="she/her" />
+              </label>
+            </div>
+
+            <div class="row">
+              <label>
+                Theme
+                <input type="text" id="theme" value="Moonlit magic" />
+              </label>
+              <label>
+                Status
+                <input type="text" id="status" value="Open to RP" />
+              </label>
+            </div>
+
+            <label>
+              Bio
+              <textarea id="bio">A quiet ranger with a lantern heart, always collecting lost stories from the stars.</textarea>
+            </label>
+
+            <button class="btn primary" type="submit">Save character</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h2>Recent corkboard</h2>
+          <div class="feed" id="feedList">
+            <article class="card feed-card">
+              <div class="thumb">🌙</div>
+              <div>
+                <div class="meta-row">
+                  <h3 style="margin:0;">Violet Frost</h3>
+                  <span class="pill">Featured</span>
+                </div>
+                <div class="mini">by Rabby • 2 hours ago</div>
+                <p style="margin: 10px 0 0; color: var(--muted); line-height: 1.5;">A brave little mage who reads the sky like a diary.</p>
+              </div>
+            </article>
+
+            <article class="card feed-card">
+              <div class="thumb">🌸</div>
+              <div>
+                <div class="meta-row">
+                  <h3 style="margin:0;">Luna Bloom</h3>
+                  <span class="pill">Fresh</span>
+                </div>
+                <div class="mini">by Nia • 1 day ago</div>
+                <p style="margin: 10px 0 0; color: var(--muted); line-height: 1.5;">Gardener of glowing herbs and impossible moonflowers.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const form = document.getElementById('ocForm');
+      const feedList = document.getElementById('feedList');
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const name = document.getElementById('name').value.trim() || 'Untitled OC';
+        const pronouns = document.getElementById('pronouns').value.trim() || 'they/them';
+        const theme = document.getElementById('theme').value.trim() || 'Custom';
+        const status = document.getElementById('status').value.trim() || 'New';
+        const bio = document.getElementById('bio').value.trim() || 'No bio yet.';
+
+        const icon = ['🌙', '🌸', '✨', '🦊', '🌊', '🌟'][Math.floor(Math.random() * 6)];
+
+        const entry = document.createElement('article');
+        entry.className = 'card feed-card';
+        entry.innerHTML = `
+          <div class="thumb">${icon}</div>
+          <div>
+            <div class="meta-row">
+              <h3 style="margin:0;">${name}</h3>
+              <span class="pill">${status}</span>
+            </div>
+            <div class="mini">by Rabby • just now</div>
+            <p style="margin: 10px 0 6px; color: var(--muted); line-height: 1.5;">${bio}</p>
+            <div class="tag-row">
+              <span class="tag">${pronouns}</span>
+              <span class="tag">${theme}</span>
+            </div>
+          </div>
+        `;
+
+        feedList.prepend(entry);
+        form.reset();
+      });
+    </script>
+  </body>
+</html>
